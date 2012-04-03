@@ -10,7 +10,7 @@ sub read_methods {
 	open(LS_CMD, "$cmd |") or die "Can't run '$cmd'\n$!\n";
 	while (<LS_CMD>) {
 		my $line = $_;
-		foreach my $statement (split(/;|(\/\/)|(\/\*)/, $line)) {
+		foreach my $statement (split(/;|(\/\/)/, $line)) {
 			if ($statement =~ /\G([+-])\s*\(\s*(.*?)\s*\)(?=\s*[\w:])/gc) {
 				my $return = $2;
 				# If line does not include semicolon, continue fetching lines until we get one
@@ -33,7 +33,7 @@ sub read_methods {
 				}
 				# Method definition
 				my @sel_parts = ();
-				while ($statement =~ /\G\s*([\$\w]*)(\s*:\s*(\((.+?)\))?\s*([\$\w]+?)\b)?\s*(((__OSX_AVAILABLE)|(NS_DEPRECATED)|(NS_AVAILABLE)).*)?/gc) {
+				while ($statement =~ /\G\s*([\$\w]*)(\s*:\s*(\((.+?)\))?\s*([\$\w]+?)\b)?\s*((\/\*)?((__OSX_AVAILABLE)|(NS_DEPRECATED)|(NS_AVAILABLE)).*)?/gc) {
 					# Read selector component
 					push(@sel_parts, $1);
 					last if !$2;
@@ -44,7 +44,7 @@ sub read_methods {
 				# Class/Protocol definition
 				my @components = split(/\s/, $_);
 				$current_class = @components[1];
-			} elsif ($statement =~ /\@property\s*\((.*)\).*?\s\*?(\S+)(\s*(__OSX|NS)_AVAILABLE.*)?\s*$/) {
+			} elsif ($statement =~ /\@property\s*\((.*)\).*?\s\*?(\S+)(\s*(\/\*)?(__OSX|NS)_AVAILABLE.*)?\s*$/) {
 				# Property definition
 				my $getter = $2;
 				if ($statement =~ /\@property\s*\(.*\).*?\(\^(\S*?)\)/) {
