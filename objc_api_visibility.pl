@@ -12,8 +12,26 @@ sub read_methods {
 		my $line = $_;
 		foreach my $statement (split(/;|(\/\/)|(\/\*)/, $line)) {
 			if ($statement =~ /\G([+-])\s*\(\s*(.*?)\s*\)(?=\s*[\w:])/gc) {
-				# Method definition
 				my $return = $2;
+				# If line does not include semicolon, continue fetching lines until we get one
+				if ($line !~ m/;/) {
+					$statement =~ s/\n$//;
+					while (<LS_CMD>) {
+						$line = $_;
+						foreach my $component (split(/;|(\/\/)|(\/\*)/, $line)) {
+							my $trimmed = $component;
+							$trimmed =~ s/^\s+//;
+							$trimmed =~ s/\s+$//;
+							if (length($trimmed)) {
+								$statement .= " $trimmed";
+							}
+						}
+						last if $line =~ m/;/;
+					}
+					# then rematch so that /G is populated
+					$statement =~ /\G([+-])\s*\(\s*(.*?)\s*\)(?=\s*[\w:])/gc;
+				}
+				# Method definition
 				my @sel_parts = ();
 				while ($statement =~ /\G\s*([\$\w]*)(\s*:\s*(\((.+?)\))?\s*([\$\w]+?)\b)?\s*(((__OSX_AVAILABLE)|(NS_DEPRECATED)|(NS_AVAILABLE)).*)?/gc) {
 					# Read selector component
