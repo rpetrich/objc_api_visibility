@@ -96,8 +96,8 @@ foreach my $binary(split("\0", `find "$sdk_path/System/Library" -maxdepth 4 -per
 		# ...mark each as private and add class names
 		my $method = shift;
 		my $class_name = shift;
-		%method_map->{$method}{'visibility'} = 'private';
-		%method_map->{$method}{'classes'}{$class_name} = 1;
+		$method_map{$method}->{'visibility'} = 'private';
+		$method_map{$method}->{'classes'}->{$class_name} = 1;
 	}
 }
 foreach my $header(split("\0", `find "$sdk_path/System/Library/Frameworks" -name "*.h" -type f -print0`)) {
@@ -105,7 +105,7 @@ foreach my $header(split("\0", `find "$sdk_path/System/Library/Frameworks" -name
 	read_methods "cat $header", sub {
 		# ...mark each as public
 		my $method = shift;
-		%method_map->{$method}{'visibility'} = 'public';
+		$method_map{$method}->{'visibility'} = 'public';
 	}
 }
 
@@ -122,8 +122,8 @@ if ($#ARGV == 0) {
 
 # Ouput as TSV with the following fields visibility, method name, class names sorted by method name
 foreach my $method(sort @names_to_output) {
-	my $visibility = %method_map->{$method}{'visibility'};
+	my $visibility = $method_map{$method}->{'visibility'};
 	$visibility = 'new' if length($visibility) == 0;
-	my $classes = join("\t", keys(%{ %method_map->{$method}{'classes'} }));
+	my $classes = join("\t", keys(%{ $method_map{$method}->{'classes'} }));
 	print "$visibility\t$method\t$classes\n";
 }
